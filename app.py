@@ -180,15 +180,18 @@ def main():
             name= input("What Item you used")
             use_supply(name)
         elif choice == "3":
-            name= input("Item name: ")
-            try:
-                qua=int(input("Quantity: "))
-                if qua>0:
-                    add_new_item(name, qua)
-                else:
-                    print("Quentity must be in positive integer")
-            except ValueError:
-                print("Please enter an integer")
+            if current_role == "admin":
+                name = input("Item name: ")
+                try:
+                    qua = int(input("Quantity: "))
+                    if qua > 0:
+                        add_new_item(name, qua)
+                    else:
+                        print("Quantity must be a positive integer")
+                except ValueError:
+                    print("Please enter an integer")
+            else:
+                print("⛔ ACCESS DENIED: Only Admins can add or restore stock.")
         elif choice == "4":
             if current_role == "admin":
                 name = input("Item name to delete:")
@@ -205,7 +208,10 @@ def main():
         elif choice == "8":
             load_all_data()
         elif choice == "9":
-            manage_room()
+            if current_role in ["admin", "staff"]:  # Only authorized roles
+                manage_room()
+            else:
+                print("⛔ ACCESS DENIED: You do not have permission to manage rooms.")
         elif choice == "10":
             print("Thank you!")
             break
@@ -222,12 +228,15 @@ def manage_room():
         print("5. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
-            num_input = input("Room number: ")
-            if num_input not in rooms:
-                rooms[num_input]= Room(num_input)
-                print(f"Room {num_input} added in system")
+            if current_role == "admin":
+                num_input = input("Room number: ")
+                if num_input not in rooms:
+                    rooms[num_input] = Room(num_input)
+                    print(f"Room {num_input} added in system")
+                else:
+                    print(f"Room {num_input} already added in system")
             else:
-                print(f"Room {num_input} already added in system")
+                print("🚫 ONLY ADMINS can create new rooms.")
         elif choice == "2":
             num_input = input("Room name: ")
             if num_input in rooms:
