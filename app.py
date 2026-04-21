@@ -266,11 +266,11 @@ if __name__ == "__main__":
             if login_user():
                 main()
         elif choice == "2":
-            register_user(users)
-            save_user()
+            register_user()
+
         elif choice == "3":
             change_password()
-            save_user()
+
         elif choice == "4":
             print("Exiting")
             break
