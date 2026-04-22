@@ -1,6 +1,31 @@
 import json
+import re
+from datetime import datetime
 users= {}
 rooms = {}
+def log_action(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open('activity_log.txt', 'a') as file:
+        file.write(f"{timestamp} {message}\n")
+        print(f"Activity logged at {timestamp}")
+def is_valid_email(email):
+    """Checks if the string follows an email format."""
+    pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    return re.match(pattern, email)
+def is_strong_password(password):
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+    if not any(char.isdigit() for char in password):
+        return False, "Password must contain at least one number."
+    if not any(char.isupper() for char in password):
+        return False, "Password must contain at least one uppercase letter."
+
+    # Check for special characters
+    special_chars = "!@#$%^&*(),.?\":{}|<>"
+    if not any(char in special_chars for char in password):
+        return False, "Password must contain at least one special character (!@#$%^&*)."
+
+    return True, "Strong password!"
 def save_user(users):
     """Saves the user database to a separate JSON file."""
     with open ('users.json', 'w') as file:
@@ -15,43 +40,62 @@ def load_user():
     except FileNotFoundError:
         users= {}
 def register_user():
-    username= input("Enter your username: ")
-    password= input("Enter your password: ")
-    confirm_password= input("Confirm your password: ")
-    role= input("Enter role (admin/staff): " ).lower()
-    if username in users:
-        print("Username already exists")
+    email= input("Enter your email address:  ")
+    if not is_valid_email(email):
+        print("Invalid email address")
         return False
-    else:
-        users[username]= {"password":password, "role":role}
-        save_user(users)
-        print(f"User {username} has been registered")
+    if email in users:
+        print("User already exists")
+        return False
+    password = input("Enter your password:  ")
+    is_strong, message = is_strong_password(password)
+    if not is_strong:
+        print(f" {message}")
+        return False
+    confirm_password = input("Confirm your password:  ")
+    if confirm_password != password:
+        print("Passwords do not match")
+        return False
+    role= input("Enter role (admin/staff): ").lower()
+    users[email]= {"password":password, "role":role}
+    save_user(users)
+    print("User registered")
+
 
 def login_user():
     global current_role
-    username = input("Enter your username: ")
+    email = input("Enter your email: ")
     password = input("Enter your password: ")
-    if username in users and users[username]["password"] == password:
-        current_role= users[username]["role"]
+    if email in users and users[email]["password"] == password:
+        current_role= users[email]["role"]
         print(f"logged in as a {current_role}")
         return True
     else:
         print("Invalid credentials")
         return False
+
+
 def change_password():
-    username=input("Enter your username: ")
-    if username not in users:
-        print("Username does not exist")
+    email = input("Enter your email: ")
+    if email not in users:
+        print("Email does not exist")
         return False
-    new_password= input("Enter your new password: ")
-    confirm_password= input("Confirm your new password: ")
+
+    new_password = input("Enter your new password: ")
+
+    is_strong, message = is_strong_password(new_password)
+    if not is_strong:
+        print(f" {message}")
+        return False
+
+    confirm_password = input("Confirm your new password: ")
     if new_password != confirm_password:
         print("Passwords do not match")
         return False
     else:
-        users[username]["password"]= new_password
+        users[email]["password"] = new_password
         save_user(users)
-        print(f"Password has been changed")
+        print(f"Password has been changed successfully")
         return True
 class Room:
     def __init__(self, room_number):
